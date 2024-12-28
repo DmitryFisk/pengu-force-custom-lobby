@@ -1,0 +1,12 @@
+.force-custom-game {
+    /*  */
+    background-image: url("button-ticker-grey.png") !important;
+}
+
+.force-custom-game:hover {
+    background-image: url("button-ticker-grey-hover.png") !important;
+}
+
+.force-custom-game:active {
+    background-image: url("button-ticker-grey-active.png") !important;
+}
