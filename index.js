@@ -22,11 +22,15 @@ function appendButton() {
             button.onclick = () => createLobby();
 
             rootDiv.append(buttonDiv);
-            navbarContainer.insertBefore(rootDiv, document.querySelector(".navigation-status-ticker"));
+            
+            const statusTicker = document.querySelector(".navigation-status-ticker");
+
+            if (statusTicker) return navbarContainer.insertBefore(rootDiv, statusTicker);
+
+            return navbarContainer.insertBefore(rootDiv, document.querySelector(".main-nav-bar "));
         }
     }, 100);
 }
-
 
 async function createLobby() {
     const requestBody = {
