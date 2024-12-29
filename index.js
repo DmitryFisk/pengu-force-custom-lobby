@@ -27,7 +27,7 @@ function appendButton() {
 
             if (statusTicker) return navbarContainer.insertBefore(rootDiv, statusTicker);
 
-            return navbarContainer.insertBefore(rootDiv, document.querySelector(".main-nav-bar "));
+            return navbarContainer.insertBefore(rootDiv, document.querySelector(".main-nav-bar"));
         }
     }, 100);
 }
