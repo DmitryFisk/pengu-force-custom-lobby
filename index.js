@@ -1,64 +1,98 @@
 import "./assets/styles.css";
 
-export function load() {
-    appendButton();
-}
+class CustomGameButton {
+    constructor() {
+        this.observer = null;
+        this.button = null;
+    }
 
-function appendButton() {
-    setInterval(() => {
-        const navbarContainer = document.querySelector(".navigation-root-component");
+    init() {
+        this.setupObserver();
+    }
 
-        if (navbarContainer && !document.querySelector(".force-custom-game")) {
-            const rootDiv = document.createElement("div");
-            const buttonDiv = document.createElement("div");
-            const button = document.createElement("div");
+    setupObserver() {
+        this.observer = new MutationObserver(() => {
+            if (!this.button) this.tryAppendButton();
+        });
 
-            rootDiv.classList.add("navigation-status-ticker", "has-incidents", "ember-view")
-            buttonDiv.classList.add("ticker-button", "force-custom-game");
-            button.classList.add("ticker-toggle");
+        const target = document.body;
+        this.observer.observe(target, { 
+            childList: true, 
+            subtree: true 
+        });
+    }
 
-            buttonDiv.append(button);
+    tryAppendButton() {
+        const navMenu = document.querySelector('.left-nav-menu');
+        if (!navMenu || document.querySelector('.force-custom-game')) return;
 
-            button.onclick = () => createLobby();
+        this.button = this.createButtonElement();
+        navMenu.insertBefore(this.button, navMenu.firstChild);
+    }
 
-            rootDiv.append(buttonDiv);
-            
-            const statusTicker = document.querySelector(".navigation-status-ticker");
+    createButtonElement() {
+        const rootDiv = document.createElement("div");
+        const buttonDiv = document.createElement("div");
+        const button = document.createElement("div");
 
-            if (statusTicker) return navbarContainer.insertBefore(rootDiv, statusTicker);
+        rootDiv.className = "navigation-status-ticker has-incidents ember-view";
+        buttonDiv.className = "ticker-button force-custom-game";
+        button.className = "ticker-toggle";
 
-            return navbarContainer.insertBefore(rootDiv, document.querySelector(".main-nav-bar"));
+        buttonDiv.addEventListener('click', () => createLobby());
+        
+        buttonDiv.append(button);
+        rootDiv.append(buttonDiv);
+        return rootDiv;
+    }
+
+    cleanup() {
+        if (this.observer) {
+            this.observer.disconnect();
+            this.observer = null;
         }
-    }, 100);
+    }
 }
 
 async function createLobby() {
-    const requestBody = {
-        customGameLobby: {
-            configuration: {
-                gameMode: "PRACTICETOOL",
-                gameMutator: "",
-                gameServerRegion: "",
-                mapId: 11,
-                mutators: { id: 1 },
-                spectatorPolicy: "AllAllowed",
-                teamSize: 1,
+    try {
+        const requestBody = {
+            customGameLobby: {
+                configuration: {
+                    gameMode: "PRACTICETOOL",
+                    gameMutator: "",
+                    gameServerRegion: "",
+                    mapId: 11,
+                    mutators: { id: 1 },
+                    spectatorPolicy: "AllAllowed",
+                    teamSize: 1,
+                },
+                lobbyName: `YOU'LL NEVER SEE IT COMING`,
+                lobbyPassword: ""
             },
-            lobbyName: `YOU'LL NEVER SEE IT COMING`,
-            lobbyPassword: ""
-        },
-        isCustom: true
-    }
+            isCustom: true
+        };
 
-    const res = await fetch("/lol-lobby/v2/lobby", {
-        method: "POST",
-        body: JSON.stringify(requestBody),
-        headers: {
-            "Content-Type": "application/json"
+        const res = await fetch("/lol-lobby/v2/lobby", {
+            method: "POST",
+            body: JSON.stringify(requestBody),
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        const data = await res.json();
+        if (data && data.canStartActivity) {
+            await fetch("/lol-lobby/v1/lobby/custom/start-champ-select", { 
+                method: "POST" 
+            });
         }
-    });
+    } catch (error) {
+        console.error('Failed to create lobby:', error);
+    }
+}
 
-    const data = await res.json();
-    
-    if (data && data.canStartActivity) return await fetch(`/lol-lobby/v1/lobby/custom/start-champ-select`, { method: "POST" });
+export function load() {
+    const customGameButton = new CustomGameButton();
+    customGameButton.init();
 }
