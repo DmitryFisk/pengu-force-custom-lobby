@@ -1,4 +1,6 @@
 import "./assets/styles.css";
+import CustomGameSettings from "./ui";
+import bots from "./bots";
 
 class CustomGameButton {
     constructor() {
@@ -23,8 +25,8 @@ class CustomGameButton {
     }
 
     tryAppendButton() {
-        const navMenu = document.querySelector('.left-nav-menu');
-        if (!navMenu || document.querySelector('.force-custom-game')) return;
+        const navMenu = document.querySelector(".left-nav-menu");
+        if (!navMenu || document.querySelector(".force-custom-game")) return;
 
         this.button = this.createButtonElement();
         navMenu.insertBefore(this.button, navMenu.firstChild);
@@ -39,22 +41,17 @@ class CustomGameButton {
         buttonDiv.className = "ticker-button force-custom-game";
         button.className = "ticker-toggle";
 
-        buttonDiv.addEventListener('click', () => createLobby());
+        buttonDiv.addEventListener("click", () => createLobby());
         
         buttonDiv.append(button);
         rootDiv.append(buttonDiv);
         return rootDiv;
     }
-
-    cleanup() {
-        if (this.observer) {
-            this.observer.disconnect();
-            this.observer = null;
-        }
-    }
 }
 
 async function createLobby() {
+    const botsAmount = DataStore.get("fcg-bots-amount");
+
     try {
         const requestBody = {
             customGameLobby: {
@@ -65,7 +62,7 @@ async function createLobby() {
                     mapId: 11,
                     mutators: { id: 1 },
                     spectatorPolicy: "AllAllowed",
-                    teamSize: 1,
+                    teamSize: botsAmount == 0 ? 1 : botsAmount,
                 },
                 lobbyName: `YOU'LL NEVER SEE IT COMING`,
                 lobbyPassword: ""
@@ -83,16 +80,22 @@ async function createLobby() {
 
         const data = await res.json();
         if (data && data.canStartActivity) {
+            if (botsAmount > 0) await bots.add(botsAmount)
+
             await fetch("/lol-lobby/v1/lobby/custom/start-champ-select", { 
                 method: "POST" 
             });
         }
     } catch (error) {
-        console.error('Failed to create lobby:', error);
+        console.error(`Failed to create lobby: ${error}`);
     }
 }
 
 export function load() {
     const customGameButton = new CustomGameButton();
+    const customGameSettings = new CustomGameSettings();
     customGameButton.init();
+    customGameSettings.init();
+
+    if (!DataStore.has("fcg-bots-amount")) DataStore.set("fcg-bots-amount", 0);
 }
