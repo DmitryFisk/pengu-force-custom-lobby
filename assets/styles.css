@@ -7,5 +7,17 @@
 }
 
 .force-custom-game:active {
-    background-image: url("button-ticker-grey-active.png") !important;
+    background-image: url("button-ticker-grey-active.png") !important;  
+}
+
+.force-custom-game-zh {
+    background-image: url("zh/button-ticker.png") !important;
+}
+
+.force-custom-game-zh:hover {
+    background-image: url("zh/button-ticker-hover.png") !important;
+}
+
+.force-custom-game-zh:active {
+    background-image: url("zh/button-ticker-active.png") !important;
 }
