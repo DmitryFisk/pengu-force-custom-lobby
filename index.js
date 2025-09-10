@@ -1,8 +1,8 @@
 import "./assets/styles.css";
-import CustomGameSettings from "./ui";
 import bots from "./bots";
+import CustomGameSettings from "./ui";
 
-const zhButtonAlternative = [ "zh-CN", "zh-TW" ]; // I'm sorry if this incorrect
+const zhButtonAlternative = ["zh-CN", "zh-TW"]; // I'm sorry if this incorrect
 
 class CustomGameButton {
     constructor() {
@@ -20,9 +20,9 @@ class CustomGameButton {
         });
 
         const target = document.body;
-        this.observer.observe(target, { 
-            childList: true, 
-            subtree: true 
+        this.observer.observe(target, {
+            childList: true,
+            subtree: true
         });
     }
 
@@ -46,11 +46,11 @@ class CustomGameButton {
         button.className = "ticker-toggle";
 
         buttonDiv.addEventListener("click", () => createLobby());
-        
+
         buttonDiv.append(button);
         rootDiv.append(buttonDiv);
 
-        if (document.querySelector(".fcg-root")) return null; // this prevents button duplicating when league client is lagging af (for example when you reload it way too much times or smth else)
+        if (document.querySelector(".fcg-root")) return null; // tldr: skill issue; this prevents button duplicating when league client is lagging af (for example when you reload it way too much times or smth else)
 
         return rootDiv;
     }
@@ -58,9 +58,14 @@ class CustomGameButton {
 
 async function createLobby() {
     const botsAmount = DataStore.get("fcg-bots-amount");
+    let botsArray;
+    if (botsAmount > 0) botsArray = await bots.add(botsAmount);
+    console.log(botsArray)
 
     try {
         const requestBody = {
+            isCustom: true,
+            queueId: 3140,
             customGameLobby: {
                 configuration: {
                     gameMode: "PRACTICETOOL",
@@ -72,9 +77,10 @@ async function createLobby() {
                     teamSize: botsAmount == 0 ? 1 : botsAmount,
                 },
                 lobbyName: `YOU'LL NEVER SEE IT COMING`,
-                lobbyPassword: ""
+                lobbyPassword: "",
             },
-            isCustom: true
+            // teamOne: botsArray[0],
+            // teamTwo: botsArray[1],
         };
 
         const res = await fetch("/lol-lobby/v2/lobby", {
@@ -87,10 +93,8 @@ async function createLobby() {
 
         const data = await res.json();
         if (data && data.canStartActivity) {
-            if (botsAmount > 0) await bots.add(botsAmount)
-
-            await fetch("/lol-lobby/v1/lobby/custom/start-champ-select", { 
-                method: "POST" 
+            await fetch("/lol-lobby/v1/lobby/custom/start-champ-select", {
+                method: "POST"
             });
         }
     } catch (error) {

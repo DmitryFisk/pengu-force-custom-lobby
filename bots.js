@@ -5,47 +5,30 @@ async function loadAvailableBots() {
     const availableBots = await availableBotsRequest.json();
 
     availableBots.forEach((b) => {
-        bots.push({ championId: b.id, botDifficulty: "RSINTERMEDIATE" });
+        bots.push({ championId: b.id, botDifficulty: "RSINTERMEDIATE", botUuid: "ca50e3ff-84d3-45bc-8338-c01db0ef259a", isBot: true });
     });
 }
 
 async function add(amount) {
     if (bots.length < 1) await loadAvailableBots();
 
-    let teamASize = 1, teamBSize, requestBody, sideA = false;
+    let teamA = [0], teamB = [], sideA = false;
 
     for (let i = 0; i < amount * 2 - 1; i++) {
-        requestBody = bots[Math.floor(Math.random() * bots.length)];
-        requestBody.botUuid = "7dcac880-d728-11ef-a177-03dba18923e5"; // might break in future
+        const randomBot = bots[Math.floor(Math.random() * bots.length)];
+        
+        if (sideA && teamA.length < 5) {
+            teamA.push({ ...randomBot, teamId: "100" });
 
-        if (sideA && teamASize < 5) {
-            requestBody.teamId = "100";
-
-            await fetch(`/lol-lobby/v1/lobby/custom/bots`, {
-                method: "POST",
-                body: JSON.stringify(requestBody),
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            });
-
-            teamASize++;
             sideA = false;
         } else {
-            requestBody.teamId = "200";
-            
-            await fetch(`/lol-lobby/v1/lobby/custom/bots`, {
-                method: "POST",
-                body: JSON.stringify(requestBody),
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            });
+            teamB.push({ ...randomBot, teamId: "200" });
 
-            teamBSize++;
             sideA = true;
         }
     }
+
+    return [teamA, teamB];
 }
 
 export default {
